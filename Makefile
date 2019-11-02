@@ -1,5 +1,5 @@
 build:
-	go build -o bin/ssmsh src/*
+	go build -o bin/ssmsh internal/app/ssmsh/*
 
 run:
 	bin/ssmsh
