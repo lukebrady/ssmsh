@@ -37,6 +37,8 @@ func (cmd *SSMCommandLineTool) commandType(command string) {
 			fmt.Println("You have already logged into your AWS account.")
 			return
 		}
+	default:
+		fmt.Printf("%s is not an ssmsh command.\n", command)
 	}
 }
 
