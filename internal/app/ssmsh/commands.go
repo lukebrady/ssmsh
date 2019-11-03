@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/fatih/color"
 )
@@ -23,6 +24,8 @@ func InitializeSSMCommandLineTool() *SSMCommandLineTool {
 
 func (cmd *SSMCommandLineTool) commandType(command string) {
 	switch command {
+	case "init":
+		cmd.initCommand()
 	case "list":
 		if cmd.authenticated != false {
 			cmd.listCommand()
@@ -39,6 +42,19 @@ func (cmd *SSMCommandLineTool) commandType(command string) {
 		}
 	default:
 		fmt.Printf("%s is not an ssmsh command.\n", command)
+	}
+}
+
+func (cmd *SSMCommandLineTool) initCommand() {
+	err := createSSMSHDirectory()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = downloadSSMSessionPlugin()
+	if err != nil {
+		log.Println(err)
+		return
 	}
 }
 
