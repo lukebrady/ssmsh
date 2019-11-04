@@ -26,3 +26,30 @@ func downloadSSMSessionPlugin() error {
 	}
 	return nil
 }
+
+func extractSSMSessionPlugin() error {
+	err := exec.Command(
+		"unzip",
+		".ssmsh/sessionmanager-bundle.zip",
+		"-d",
+		".ssmsh/",
+	).Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func installSSMSessionPlugin() error {
+	err := exec.Command(
+		".ssmsh/sessionmanager-bundle/install",
+		"-i",
+		"/usr/local/sessionmanagerplugin",
+		"-b",
+		"/usr/local/bin/session-manager-plugin",
+	).Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}

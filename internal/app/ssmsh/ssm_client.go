@@ -16,11 +16,12 @@ type SSMClient struct {
 }
 
 // NewSSMClient creates a new AWS session and returns the SSM client object.
-func NewSSMClient() (*SSMClient, error) {
+func NewSSMClient(profileName string) (*SSMClient, error) {
 	// Create a new session with static credential values.
 	sess, err := session.NewSessionWithOptions(session.Options{
 		SharedConfigState:       session.SharedConfigEnable,
 		AssumeRoleTokenProvider: stscreds.StdinTokenProvider,
+		Profile:                 profileName,
 	})
 	if err != nil {
 		return nil, err

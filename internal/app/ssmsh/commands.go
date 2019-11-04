@@ -56,10 +56,18 @@ func (cmd *SSMCommandLineTool) initCommand() {
 		log.Println(err)
 		return
 	}
+	err = extractSSMSessionPlugin()
+	if err != nil {
+		return
+	}
+	err = installSSMSessionPlugin()
+	if err != nil {
+		return
+	}
 }
 
 func (cmd *SSMCommandLineTool) loginCommand() {
-	ssmClient, err := NewSSMClient()
+	ssmClient, err := NewSSMClient("test")
 	if err != nil {
 		fmt.Println(color.RedString("An error occurred while authenticating..."))
 		return
