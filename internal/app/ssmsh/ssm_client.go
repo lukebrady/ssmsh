@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os/exec"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -69,13 +69,16 @@ func (s *SSMClient) ListManagedInstances() {
 
 // StartSSMSession creates a new SSM session and enters the remote instance.
 func (s *SSMClient) StartSSMSession(instanceID string) error {
-	session, err := s.client.StartSession(&ssm.StartSessionInput{
-		Target: aws.String(instanceID),
-	})
+	err := exec.Command(
+		"aws",
+		"ssm",
+		"start-session",
+		"--target",
+		instanceID,
+	).Run()
 	if err != nil {
 		return err
 	}
-	fmt.Println(session.SessionId)
 	return nil
 }
 

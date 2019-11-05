@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/fatih/color"
 )
@@ -45,11 +43,6 @@ func (cmd *SSMCommandLineTool) commandType(command string) {
 	case "session":
 		if cmd.authenticated != false {
 			fmt.Print("\nEnter the instance id: ")
-			scanner := bufio.NewScanner(os.Stdin)
-			for {
-				instanceID := scanner.Text()
-				cmd.client.StartSSMSession(instanceID)
-			}
 		} else {
 			fmt.Println("You must login to AWS to perform this operation.")
 			return
