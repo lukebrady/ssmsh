@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/fatih/color"
 )
@@ -40,6 +42,18 @@ func (cmd *SSMCommandLineTool) commandType(command string) {
 			fmt.Println("You have already logged into your AWS account.")
 			return
 		}
+	case "session":
+		if cmd.authenticated != false {
+			fmt.Print("\nEnter the instance id: ")
+			scanner := bufio.NewScanner(os.Stdin)
+			for {
+				instanceID := scanner.Text()
+				cmd.client.StartSSMSession(instanceID)
+			}
+		} else {
+			fmt.Println("You must login to AWS to perform this operation.")
+			return
+		}
 	default:
 		fmt.Printf("%s is not an ssmsh command.\n", command)
 	}
@@ -47,6 +61,11 @@ func (cmd *SSMCommandLineTool) commandType(command string) {
 
 func (cmd *SSMCommandLineTool) initCommand() {
 	err := createSSMSHDirectory()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	err = createSSMSHConfigurationFile()
 	if err != nil {
 		log.Println(err)
 		return
@@ -67,13 +86,17 @@ func (cmd *SSMCommandLineTool) initCommand() {
 }
 
 func (cmd *SSMCommandLineTool) loginCommand() {
-	ssmClient, err := NewSSMClient("test")
+	ssmClient, err := NewSSMClient()
 	if err != nil {
 		fmt.Println(color.RedString("An error occurred while authenticating..."))
 		return
 	}
 	cmd.client = ssmClient
 	cmd.authenticated = true
+}
+
+func (cmd *SSMCommandLineTool) startSessionCommand(instanceID string) {
+	cmd.client.StartSSMSession(instanceID)
 }
 
 func (cmd *SSMCommandLineTool) listCommand() {

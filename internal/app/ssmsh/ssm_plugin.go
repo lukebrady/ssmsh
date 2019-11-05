@@ -1,12 +1,23 @@
 package main
 
 import (
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"runtime"
 )
 
 func createSSMSHDirectory() error {
 	err := os.Mkdir("./.ssmsh/", 0777)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createSSMSHConfigurationFile() error {
+	configuration := []byte("{\n\t\"region\" : \"\",\n\t\"profile\":\"\"\n}")
+	err := ioutil.WriteFile("./.ssmsh/config.json", configuration, 0660)
 	if err != nil {
 		return err
 	}
@@ -41,15 +52,16 @@ func extractSSMSessionPlugin() error {
 }
 
 func installSSMSessionPlugin() error {
-	err := exec.Command(
-		".ssmsh/sessionmanager-bundle/install",
-		"-i",
-		"/usr/local/sessionmanagerplugin",
-		"-b",
-		"/usr/local/bin/session-manager-plugin",
-	).Run()
-	if err != nil {
-		return err
+	if runtime.GOOS == "darwin" {
+		err := exec.Command(
+			"cp",
+			"-rf",
+			".ssmsh/sessionmanager-bundle/bin/",
+			"/usr/local/",
+		).Run()
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

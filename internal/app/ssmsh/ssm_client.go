@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -13,21 +16,37 @@ import (
 type SSMClient struct {
 	client           *ssm.SSM
 	managedInstances []*string
+	configuration    *SSMClientConfiguration
+}
+
+// SSMClientConfiguration holds the SSM configuration from .ssmsh/config.json
+type SSMClientConfiguration struct {
+	Region  string `json:"region"`
+	Profile string `json:"profile"`
 }
 
 // NewSSMClient creates a new AWS session and returns the SSM client object.
-func NewSSMClient(profileName string) (*SSMClient, error) {
+func NewSSMClient() (*SSMClient, error) {
+	// Read in the SSM configuration.
+	configObject := &SSMClientConfiguration{}
+	configFile, err := ioutil.ReadFile(".ssmsh/config.json")
+	if err != nil {
+		fmt.Println("Have you initalized SSMSH? Run init to create the .ssmsh directory.")
+		return nil, err
+	}
+	json.Unmarshal(configFile, configObject)
 	// Create a new session with static credential values.
 	sess, err := session.NewSessionWithOptions(session.Options{
 		SharedConfigState:       session.SharedConfigEnable,
 		AssumeRoleTokenProvider: stscreds.StdinTokenProvider,
-		Profile:                 profileName,
+		Profile:                 configObject.Profile,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return &SSMClient{
-		client: ssm.New(sess),
+		client:        ssm.New(sess),
+		configuration: configObject,
 	}, nil
 }
 
@@ -46,6 +65,18 @@ func (s *SSMClient) ListManagedInstances() {
 	if err != nil {
 		log.Println(err)
 	}
+}
+
+// StartSSMSession creates a new SSM session and enters the remote instance.
+func (s *SSMClient) StartSSMSession(instanceID string) error {
+	session, err := s.client.StartSession(&ssm.StartSessionInput{
+		Target: aws.String(instanceID),
+	})
+	if err != nil {
+		return err
+	}
+	fmt.Println(session.SessionId)
+	return nil
 }
 
 // PrintManagedInstances prints the list of managed instances.
