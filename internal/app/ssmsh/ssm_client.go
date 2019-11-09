@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"os/exec"
+
+	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/aws/credentials/stscreds"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -15,7 +16,7 @@ import (
 // SSMClient holds an SSM Client object with associated to an AWS session.
 type SSMClient struct {
 	client           *ssm.SSM
-	managedInstances []*string
+	managedInstances []string
 	configuration    *SSMClientConfiguration
 }
 
@@ -55,7 +56,7 @@ func (s *SSMClient) ListManagedInstances() {
 	params := &ssm.DescribeInstanceInformationInput{}
 	err := s.client.DescribeInstanceInformationPages(params, func(page *ssm.DescribeInstanceInformationOutput, last bool) bool {
 		for _, instance := range page.InstanceInformationList {
-			s.managedInstances = append(s.managedInstances, instance.InstanceId)
+			s.managedInstances = append(s.managedInstances, *instance.InstanceId)
 		}
 		if page.NextToken == nil {
 			return false
@@ -69,13 +70,9 @@ func (s *SSMClient) ListManagedInstances() {
 
 // StartSSMSession creates a new SSM session and enters the remote instance.
 func (s *SSMClient) StartSSMSession(instanceID string) error {
-	err := exec.Command(
-		"aws",
-		"ssm",
-		"start-session",
-		"--target",
-		instanceID,
-	).Run()
+	output, err := s.client.StartSession(&ssm.StartSessionInput{
+		Target: aws.String(instanceID),
+	})
 	if err != nil {
 		return err
 	}
@@ -85,6 +82,6 @@ func (s *SSMClient) StartSSMSession(instanceID string) error {
 // PrintManagedInstances prints the list of managed instances.
 func (s *SSMClient) PrintManagedInstances() {
 	for _, instance := range s.managedInstances {
-		fmt.Println(*instance)
+		fmt.Println(instance)
 	}
 }

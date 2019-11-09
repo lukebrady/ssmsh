@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/manifoldco/promptui"
+
 	"github.com/fatih/color"
 )
 
@@ -88,11 +90,31 @@ func (cmd *SSMCommandLineTool) loginCommand() {
 	cmd.authenticated = true
 }
 
-func (cmd *SSMCommandLineTool) startSessionCommand(instanceID string) {
-	cmd.client.StartSSMSession(instanceID)
+func (cmd *SSMCommandLineTool) startSessionCommand(instanceID string) error {
+	err := cmd.client.StartSSMSession(instanceID)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return nil
 }
 
 func (cmd *SSMCommandLineTool) listCommand() {
 	cmd.client.ListManagedInstances()
-	cmd.client.PrintManagedInstances()
+	prompt := promptui.Select{
+		Label: "Select Instance",
+		Items: cmd.client.managedInstances,
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return
+	}
+	fmt.Println(result)
+	err = cmd.startSessionCommand(result)
+	if err != nil {
+		log.Println("Could not start an SSM session.")
+	}
 }
